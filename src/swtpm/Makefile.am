@@ -88,6 +88,41 @@ libswtpm_libtpms_la_LIBADD = \
 	$(LIBSECCOMP_LIBS) \
 	$(LIBCRYPTO_LIBS)
 
+if SHARED_LIBRARY_BUILD
+
+lib_LTLIBRARIES = libswtpm.la
+
+libswtpm_la_DEPENDENCIES = $(privlib_LTLIBRARIES)
+
+libswtpm_la_SOURCES = \
+		main.c \
+		daemonize.c \
+		swtpm.c \
+		swtpm_chardev.c
+
+libswtpm_la_CFLAGS = \
+	-I$(top_builddir)/include \
+	-I$(top_srcdir)/include \
+	-I$(top_srcdir)/include/swtpm \
+	-I$(top_srcdir)/src/utils \
+	$(MY_CFLAGS) \
+	$(HARDENING_CFLAGS) \
+	$(GLIB_CFLAGS) \
+	$(LIBFUSE_CFLAGS)
+
+libswtpm_la_LDFLAGS = \
+	$(MY_LDFLAGS) \
+	$(HARDENING_LDFLAGS)
+
+libswtpm_la_LIBADD = \
+	libswtpm_libtpms.la \
+	$(LIBFUSE_LIBS) \
+	$(GLIB_LIBS) \
+	$(GTHREAD_LIBS) \
+	$(LIBTPMS_LIBS)
+
+else
+
 bin_PROGRAMS = swtpm
 if WITH_CUSE
 bin_PROGRAMS += swtpm_cuse
@@ -151,6 +186,8 @@ swtpm_cuse_LDADD = \
 	$(GLIB_LIBS) \
 	$(GTHREAD_LIBS) \
 	$(LIBTPMS_LIBS)
+
+endif
 
 AM_CPPFLAGS   = 
 LDADD         = -ltpms

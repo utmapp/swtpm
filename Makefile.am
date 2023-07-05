@@ -7,9 +7,13 @@
 SUBDIRS   = \
 	include \
 	man \
+	src
+
+if !SHARED_LIBRARY_BUILD
+SUBDIRS   += \
 	samples \
-	src \
 	tests
+endif
 
 ACLOCAL_AMFLAGS = -I m4
 
