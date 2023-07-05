@@ -205,7 +205,7 @@ option_value_add(OptionValues *ovs, const OptionDesc optdesc, const char *val,
  * Returns the parse options, types, and values in OptionValues.
  */
 OptionValues *
-options_parse(char *opts, const OptionDesc optdesc[], char **error)
+options_parse(const char *opts, const OptionDesc optdesc[], char **error)
 {
     char *saveptr;
     char *tok;

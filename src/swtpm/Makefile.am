@@ -34,8 +34,16 @@ noinst_HEADERS = \
 	utils.h \
 	vtpm_proxy.h
 
+if SHARED_LIBRARY_BUILD
+
+noinst_LTLIBRARIES = libswtpm_libtpms.la
+
+else
+
 privlibdir = $(libdir)/@PACKAGE@
 privlib_LTLIBRARIES = libswtpm_libtpms.la
+
+endif
 
 libswtpm_libtpms_la_SOURCES = \
 	capabilities.c \
@@ -92,13 +100,10 @@ if SHARED_LIBRARY_BUILD
 
 lib_LTLIBRARIES = libswtpm.la
 
-libswtpm_la_DEPENDENCIES = $(privlib_LTLIBRARIES)
+libswtpm_la_DEPENDENCIES = libswtpm_libtpms.la
 
 libswtpm_la_SOURCES = \
-		main.c \
-		daemonize.c \
-		swtpm.c \
-		swtpm_chardev.c
+		swtpm_library.c
 
 libswtpm_la_CFLAGS = \
 	-I$(top_builddir)/include \
@@ -111,6 +116,7 @@ libswtpm_la_CFLAGS = \
 	$(LIBFUSE_CFLAGS)
 
 libswtpm_la_LDFLAGS = \
+	-Wl,-all_load \
 	$(MY_LDFLAGS) \
 	$(HARDENING_LDFLAGS)
 
