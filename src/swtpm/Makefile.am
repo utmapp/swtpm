@@ -34,8 +34,16 @@ noinst_HEADERS = \
 	utils.h \
 	vtpm_proxy.h
 
+if SHARED_LIBRARY_BUILD
+
+noinst_LTLIBRARIES = libswtpm_libtpms.la
+
+else
+
 privlibdir = $(libdir)/@PACKAGE@
 privlib_LTLIBRARIES = libswtpm_libtpms.la
+
+endif
 
 libswtpm_libtpms_la_SOURCES = \
 	capabilities.c \
@@ -87,6 +95,44 @@ libswtpm_libtpms_la_LIBADD = \
 	$(LIBRT_LIBS) \
 	$(LIBSECCOMP_LIBS) \
 	$(LIBCRYPTO_LIBS)
+
+if SHARED_LIBRARY_BUILD
+
+lib_LTLIBRARIES = libswtpm.la
+
+libswtpm_la_DEPENDENCIES = libswtpm_libtpms.la
+
+libswtpm_la_SOURCES = \
+	daemonize.c \
+	swtpm.c \
+	swtpm_chardev.c
+if WITH_CUSE
+libswtpm_la_SOURCES += cuse_tpm.c
+endif
+
+libswtpm_la_CFLAGS = \
+	-I$(top_builddir)/include \
+	-I$(top_srcdir)/include \
+	-I$(top_srcdir)/include/swtpm \
+	-I$(top_srcdir)/src/utils \
+	$(MY_CFLAGS) \
+	$(HARDENING_CFLAGS) \
+	$(GLIB_CFLAGS) \
+	$(LIBFUSE_CFLAGS)
+
+libswtpm_la_LDFLAGS = \
+	-Wl,-all_load \
+	$(MY_LDFLAGS) \
+	$(HARDENING_LDFLAGS)
+
+libswtpm_la_LIBADD = \
+	libswtpm_libtpms.la \
+	$(LIBFUSE_LIBS) \
+	$(GLIB_LIBS) \
+	$(GTHREAD_LIBS) \
+	$(LIBTPMS_LIBS)
+
+else
 
 bin_PROGRAMS = swtpm
 if WITH_CUSE
@@ -151,6 +197,8 @@ swtpm_cuse_LDADD = \
 	$(GLIB_LIBS) \
 	$(GTHREAD_LIBS) \
 	$(LIBTPMS_LIBS)
+
+endif
 
 AM_CPPFLAGS   = 
 LDADD         = -ltpms

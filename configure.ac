@@ -168,11 +168,17 @@ openssl)
 	;;
 esac
 
-LIBTASN1_LIBS=$(pkg-config --libs libtasn1)
-if test $? -ne 0; then
-	AC_MSG_ERROR("Is libtasn1-devel installed? -- could not get libs for libtasn1")
+AC_ARG_ENABLE([shared-lib],
+  AS_HELP_STRING([--enable-shared-lib], [Build as a shared library]))
+AM_CONDITIONAL([SHARED_LIBRARY_BUILD], [test "x$enable_shared_lib" = "xyes"])
+
+if test "x$enable_shared_lib" != "xyes"; then
+    LIBTASN1_LIBS=$(pkg-config --libs libtasn1)
+    if test $? -ne 0; then
+        AC_MSG_ERROR("Is libtasn1-devel installed? -- could not get libs for libtasn1")
+    fi
+    AC_SUBST([LIBTASN1_LIBS])
 fi
-AC_SUBST([LIBTASN1_LIBS])
 
 PKG_CHECK_MODULES(
 	[LIBTPMS],
@@ -196,13 +202,15 @@ else
 fi
 AM_CONDITIONAL([HAVE_TCSD], test "$have_tcsd" != "no")
 
-dnl We either need netstat (more common across systems) or 'ss' for test cases
-AC_PATH_PROG([NETSTAT], [netstat])
-if test "x$NETSTAT" = "x"; then
-	AC_PATH_PROG([SS], [ss])
-	if test "x$SS" = "x"; then
-		AC_MSG_ERROR(['netstat' and 'ss' tools are missing for tests: net-tools OR iproute/iproute2 package])
-	fi
+if test "x$enable_shared_lib" != "xyes"; then
+    dnl We either need netstat (more common across systems) or 'ss' for test cases
+    AC_PATH_PROG([NETSTAT], [netstat])
+    if test "x$NETSTAT" = "x"; then
+        AC_PATH_PROG([SS], [ss])
+        if test "x$SS" = "x"; then
+            AC_MSG_ERROR(['netstat' and 'ss' tools are missing for tests: net-tools OR iproute/iproute2 package])
+        fi
+    fi
 fi
 
 AC_MSG_CHECKING([for whether to build with CUSE interface])
@@ -245,17 +253,19 @@ fi
 AM_CONDITIONAL([WITH_CUSE],[test "$with_cuse" = "yes"])
 AC_MSG_RESULT($with_cuse)
 
-JSON_GLIB_CFLAGS=$(pkg-config --cflags json-glib-1.0)
-if test $? -ne 0; then
-   AC_MSG_ERROR("Is libjson-glib-dev/json-glib-devel installed? -- could not get cflags")
-fi
-AC_SUBST([JSON_GLIB_CFLAGS])
+if test "x$enable_shared_lib" != "xyes"; then
+    JSON_GLIB_CFLAGS=$(pkg-config --cflags json-glib-1.0)
+    if test $? -ne 0; then
+    AC_MSG_ERROR("Is libjson-glib-dev/json-glib-devel installed? -- could not get cflags")
+    fi
+    AC_SUBST([JSON_GLIB_CFLAGS])
 
-JSON_GLIB_LIBS=$(pkg-config --libs json-glib-1.0)
-if test $? -ne 0; then
-   AC_MSG_ERROR("Is libjson-glib-dev/json-glib-devel installed? -- could not get libs")
+    JSON_GLIB_LIBS=$(pkg-config --libs json-glib-1.0)
+    if test $? -ne 0; then
+    AC_MSG_ERROR("Is libjson-glib-dev/json-glib-devel installed? -- could not get libs")
+    fi
+    AC_SUBST([JSON_GLIB_LIBS])
 fi
-AC_SUBST([JSON_GLIB_LIBS])
 
 GLIB_CFLAGS=$(pkg-config --cflags glib-2.0)
 if test $? -ne 0; then
@@ -380,32 +390,34 @@ AS_IF([test "x$enable_default_pcr_banks" != "x"],[
 pcr_bank_checks
 AC_SUBST([DEFAULT_PCR_BANKS])
 
-AC_PATH_PROG([EXPECT], expect)
-if test "x$EXPECT" = "x"; then
-	AC_MSG_ERROR([expect is required: expect package])
-fi
+if test "x$enable_shared_lib" != "xyes"; then
+    AC_PATH_PROG([EXPECT], expect)
+    if test "x$EXPECT" = "x"; then
+        AC_MSG_ERROR([expect is required: expect package])
+    fi
 
-AC_PATH_PROG([GAWK], gawk)
-if test "x$GAWK" = "x"; then
-	AC_MSG_ERROR([gawk is required: gawk package])
-fi
+    AC_PATH_PROG([GAWK], gawk)
+    if test "x$GAWK" = "x"; then
+        AC_MSG_ERROR([gawk is required: gawk package])
+    fi
 
-AC_PATH_PROG([SOCAT], socat)
-if test "x$SOCAT" = "x"; then
-	AC_MSG_ERROR([socat is required: socat package])
-fi
+    AC_PATH_PROG([SOCAT], socat)
+    if test "x$SOCAT" = "x"; then
+        AC_MSG_ERROR([socat is required: socat package])
+    fi
 
-AC_PATH_PROG([BASE64], base64)
-if test "x$BASE64" = "x"; then
-	AC_MSG_ERROR([base64 is required: base64 package])
-fi
+    AC_PATH_PROG([BASE64], base64)
+    if test "x$BASE64" = "x"; then
+        AC_MSG_ERROR([base64 is required: base64 package])
+    fi
 
-AC_PATH_PROG([CP], cp)
-if test "x$CP" = "x"; then
-	AC_MSG_ERROR([cp is required])
-fi
+    AC_PATH_PROG([CP], cp)
+    if test "x$CP" = "x"; then
+        AC_MSG_ERROR([cp is required])
+    fi
 
-AM_PATH_PYTHON([3.3])
+    AM_PATH_PYTHON([3.3])
+fi
 
 AC_ARG_ENABLE([hardening],
   AS_HELP_STRING([--disable-hardening], [Disable hardening flags]))
@@ -595,25 +607,29 @@ AC_CONFIG_FILES([Makefile                   \
 		src/selinux/swtpm.fc        \
 		src/selinux/swtpmcuse.fc    \
 		src/swtpm/Makefile          \
-		src/swtpm_bios/Makefile     \
-		src/swtpm_cert/Makefile     \
-		src/swtpm_ioctl/Makefile    \
-		src/swtpm_localca/Makefile  \
-		src/swtpm_setup/Makefile    \
 		src/utils/Makefile          \
 		src/utils/swtpm_conf.h      \
 		man/Makefile                \
 		man/man3/Makefile           \
 		man/man5/Makefile           \
 		man/man8/Makefile           \
-		tests/Makefile              \
-		tests/test_config           \
 		])
 AC_CONFIG_FILES([samples/swtpm-localca],
                 [chmod 755 samples/swtpm-localca])
+if test "x$enable_shared_lib" != "xyes"; then
+    AC_CONFIG_FILES([src/swtpm_bios/Makefile     \
+            src/swtpm_cert/Makefile     \
+            src/swtpm_ioctl/Makefile    \
+            src/swtpm_localca/Makefile  \
+            src/swtpm_setup/Makefile    \
+            tests/Makefile              \
+            tests/test_config           \
+            ])
+fi
 AC_OUTPUT
 
 echo
+printf "shared_lib      : %5s\n" $enable_shared_lib
 printf "with_gnutls     : %5s  (no = swtpm_cert will NOT be built)\n" $with_gnutls
 printf "with_selinux    : %5s  (no = SELinux policy extensions will NOT be built)\n" $with_selinux
 printf "with_cuse       : %5s  (no = no CUSE interface)\n" $with_cuse
